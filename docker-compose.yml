@@ -1,0 +1,48 @@
+version: "3.1" # specify docker-compose version
+
+# Define the services/containers to be run
+services:
+  database: # name of the third service
+    image: mysql:5.7 # specify image to build container from
+    restart: always
+    #command: --default-authentication-plugin=mysql_native_password
+    container_name: 'mysql'
+    environment:
+        MYSQL_ROOT_PASSWORD: demo-secret
+        MYSQL_DATABASE: demo
+        MYSQL_USER: demo-user
+        MYSQL_PASSWORD: demo-secret
+    volumes:
+      - DBData:/var/lib/mysql #Persistent MongoDB container
+    ports:
+      - "3306:3306" # specify port forewarding
+    
+  tm-frontend: # name of the first service
+    build:  # specify the directory of the Dockerfile
+      context: .
+      dockerfile: Dockerfile
+    container_name: "TM-Frontend"
+    ports:
+      - "4200:4200" # specify port forewarding
+      - "49153:49153"
+    depends_on:
+      - database  
+    volumes:
+      - "/app/node_modules"
+      - ".:/app" # this will enable changes made to the angular app reflect in the container
+
+  mongodb_container:
+    container_name: backend_demo
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_DATABASE: backend_demo
+    #  MONGO_INITDB_ROOT_USERNAME: root
+    #  MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db          
+
+volumes:
+    DBData:
+    mongodb_data_container:
